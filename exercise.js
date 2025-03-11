@@ -27,97 +27,6 @@
 // }
 
 
-// class Scheduler {
-//     constructor() {
-//         this.queue = [];
-//         this.running = 0;
-//         this.maxConcurrent = 0;
-//     }
-//     add(promiseCreator) {
-//             return new Promise((resolve) => {
-//                 const task = () => {
-//                     this.running++;
-//                     promiseCreator().then(() => {
-//                         resolve();
-//                         this.running--;
-//                         if (this.queue.length > 0) {
-//                             const nextTask = this.queue.shift();
-//                             nextTask();
-//                         }
-//                     })
-//                 }
-//                 if (this.running < this.maxConcurrent) {
-//                     task();
-//                 } else {
-//                     this.queue.push(task)
-//                 }
-                
-                
-//             })
-//     }
-// }
-
-
-// class Scheduler {
-//     constructor() {
-//         this.queue = [];
-//         this.running = 0;
-//         this.maxConcurrent = 2;
-//     }
-//     add(promiseCreator) {
-//         return new Promise((resolve) => {
-//             const task = () => {
-//                 this.running++;
-//                 promiseCreator().then(() => {
-//                     resolve();
-//                     this.running--;
-//                     if (this.queue.length > 0) {
-//                         const nextTask = this.queue.shift();
-//                         nextTask();
-//                     }
-//                 })
-//             }
-//             if (this.running < this.maxConcurrent) {
-//                 task();
-//             } else {
-//                 this.queue.push(task);
-//             }
-//         })
-//     }
-// }
-
-
-
-// class Scheduler {
-//     constructor() {
-//         this.queue = [];
-//         this.running = 0;
-//         this.maxConcurrent = 2;
-        
-//     }
-//     add(promiseCreator) {
-//         return new Promise((resolve) => {
-//             const task = () => {
-//                 this.running++;
-//                 promiseCreator().then(() => {
-//                     resolve();
-//                     this.running--;
-//                     if (this.queue.length > 0) {
-//                         const nextTask = this.queue.shift();
-//                         nextTask();
-//                     }
-//                 })
-//             }
-//             if (this.running < this.maxConcurrent) {
-//                 task();
-//             } else {
-//                 this.queue.push(task);
-//             }
-//         })
-//     }
-// }
-
-
 Array.prototype._map = function(Fn) {
     if (typeof this !== 'array') {
         throw new Error('this is not an array')
@@ -130,11 +39,12 @@ Array.prototype._map = function(Fn) {
 }
 
 // 原型链继承
+// 问题：1. 原型中包含的引用类型将被所有实例共享 2. 子类再实例化的时候不能给父类构造函数传参
 function Animal(name) {
-    this.name = name
+    this.colors = ['red']
 }
-Animal.prototype.sayName = function() {
-    return this.name
+Animal.prototype.getColors = function() {
+    return this.colors
 }
 function Dog() {
 
@@ -142,8 +52,12 @@ function Dog() {
 Dog.prototype = new Animal()
 
 // 借用构造函数
+// 解决了原型链的问题，但是导致每次创建子类实例都会创建一遍方法。
 function Animal(name) {
     this.name = name
+    this.getName = function() {
+        return this.name
+    }
 }
 function Dog(name) {
     Animal.call(this, name)
@@ -152,6 +66,7 @@ Dog.prototype = new Animal()
 
 
 // 组合继承
+// 使用原型链集成原型上的属性和方法、使用构造函数继承实例属性
 function Animal(name) {
     this.name = name
     this.colors = [1,2]
@@ -206,11 +121,11 @@ class Dog extends Animal {
 // https 加密的过程，
 /**
  * tls 加密的过程分为四步或者五步
- * 1. 客户端向服务端发起请求，请求中包含自己支持的加密方法、协议版本号和一个随机数
- * 2. 服务端收到请求后，确认双方使用的加密方法，向客户端发送一个随机数，并且给出自己的数字证书，
- * 3. 客户端收到后使用证书中的公钥对新生成的随机数加密，并且提供一个前面所有 内容的 hash 值，发送给服务端，共服务端检验。
- * 4. 服务器端收到加密随机数，使用证书的公钥对其解密，并且提供前面所有内容的 hash 值共客户端检验。
- * 5. 双方使用确定的加密方法对三个随机数加密，后面就用这个密钥来进行数据传输。
+ * 1. 首先由客户端向服务器端发送使用的协议的版本号、一个随机数和可以使用的加密方法。
+ * 2. 服务端收到请求后，确认双方使用的加密方法，向客户端发送一个随机数，并且给出自己的数字证书。
+ * 3. 客户端收到后使用证书中的公钥对新生成的随机数加密，并且提供一个前面所有 内容的 hash 值，发送给服务端，供服务端检验。
+ * 4. 服务器端收到加密随机数，使用证书的公钥对其解密，并且提供前面所有内容的 hash 值，供客户端检验。
+ * 5. 双方使用确定的加密方法对三个随机数加密，后面就用这个密钥来进行数据传输。支持的加密方法、协议版本号和一个随机数
  * 
  * 
  * 为什么要用三个随机数，因为 tls 加密方法默认不称为一个随机数的可靠性，觉得它是伪随机，三个随机数接近随机，比较可靠。
@@ -236,7 +151,7 @@ class Dog extends Animal {
  */
 
 function myInstanceOf(left, right) {
-    const proto = left.__proto__
+    let proto = left.__proto__
     const prototype = right.prototype
     while(true) {
         if (proto === null) return false
@@ -277,79 +192,6 @@ function myInstanceOf(left, right) {
  */
 
 
-
-// 原型链集成
-// 问题：1. 原型中包含的引用类型将被所有实例共享 2. 子类再实例化的时候不能给父类构造函数传参
-function Person(name) {
-    this.name = name
-}
-Person.prototype.sayName = function() {
-    console.log(this.name)
-}
-
-function Child(name) {
-    this.name = name
-}
-
-Child.prototype = new Person();
-
-
-// 借用构造函数实现集成
-// 解决了原型链的问题，但是导致每次创建子类实例都会创建一遍方法。
-function Person(name) {
-    this.name = name
-}
-function Child(name) {
-    Person.call(this, name)
-}
-Child.prototype = new Person()
-
-
-// 组合继承
-// 使用原型链集成原型上的属性和方法、使用构造函数继承实例属性
-function Person(name) {
-    this.name = name
-}
-Person.prototype.sayName = function() {
-    console.log(this.name)
-}
-
-function Child(name) {
-    Person.call(this, name)
-}
-Child.prototype = new Person()
-Child.prototype.constructor = Child
-
-// 寄生式组合集成
-function Person(name) {
-    this.name = name
-}
-Person.prototype.sayName = function() {
-    console.log(this.name)
-}
-function Child(name) {
-
-}
-Child.prototype = Object.create(Person.prototype)
-Child.prototype.constructor = Child
-
-// class 实现继承
-class Person {
-    constructor(name) {
-        this.name = name
-    }
-    sayName() {
-        console.log(this.name)
-    }
-}
-
-class Child extends Person {
-    constructor(name, age) {
-        super(name)
-        this.age = age
-    }
-}
-
 /**
  * IE 事件模型，一次事件共有两个过程，首先是执行目标元素上绑定的事件，然后是事件冒泡阶段，逐级冒泡，检查经过的节点是否绑定了监听事件，有则执行，直到 document 节点
  * DOM2 事件模型，一次事件分为三个过程，首先是捕获阶段，从 document节点一直向下，逐渐检查经过的节点是否绑定了监听事件，有则执行，后面两个阶段跟 IE 事件模型一致。
@@ -382,8 +224,8 @@ class Child extends Person {
  * 浏览器的缓存策略
  * 分为强缓存和协商缓存，强缓存直接判断资源是否已经过期，没有过期直接使用，协商缓存需要向服务器发送请求，如果返回 304 则直接使用缓存，否则服务器会返回新资源。
  * http1.0 强缓存是 expires，它是资源过期时间，是一个绝对时间，如果客户端修改时间等会影响缓存命中效率，http1.1 强缓存新出的cacheControl，该字段的
- * max-age是一个相对时间，它会根据资源第一次请求时的时间来计算出资源过期的时间，还有 no cache 可以缓存但立即失效，no store 不可以缓存， private 规定资源只能被客户端缓存，不能被代理服务器缓存
- * http1.0 协商缓存用的是 last modified（配合 if modified since 使用），这个值是上一次这个资源修改的时间，精确到 1s ，如果 1s 内多次修改则监听不到，http1.1 新出的 etag 是
+ * max-age是一个最大生存时间，它会根据资源第一次请求时的时间来计算出资源过期的时间，还有 no cache 可以缓存但立即失效，no store 不可以缓存， private 规定资源只能被客户端缓存，不能被代理服务器缓存
+ * http1.0 协商缓存用的是 last modified（配合 if modified since 使用），这个值是上一次这个资源修改的时间，精确到秒 ，如果 1s 内多次修改则监听不到，http1.1 新出的 etag 是
  * 资源的唯一标识符，配合 if no match 使用。
  * 
  *  
@@ -447,24 +289,6 @@ const gen = generatorFunc()
 gen.next()
 
 
-Function.prototype.bind2 = function(context) {
-    if (typeof this !== 'function') {
-        throw new Error('Function.prototype.bind - what is trying to be bound is not callable')
-    }
-    const self = this
-    const args = [...arguments].slice(1)
-
-    const fNOP = function() {}
-    const fBound = function() {
-        const bindArgs = [...arguments]
-        return self.apply(this instanceof fNOP ? this : context, args.concat(bindArgs))
-    }
-
-    fNOP.prototype = this.prototype
-    fBound.prototype = new fNOP
-    return fBound
-}
-
 /**
  * 在 React 16.x 版本引入了 Fiber 架构，它是对 React 核心算法的一次重新实现。引入 Fiber 主要是为了解决旧版 React 在处理大型复杂应用时遇到的性能瓶颈问题，下面从多个方面详细阐述 React 需要 Fiber 的原因：
 
@@ -490,23 +314,6 @@ Function.prototype.bind2 = function(context) {
 /**
  * bind
  */
-
-// Function.prototype.myBind = function(context) {
-//     // 判断调用对象是否为函数
-//     if (typeof this !== 'function') {
-//         throw new Error('Type Error');
-//     }
-//     // 获取参数
-//     const fn = this;
-//     const args = [...arguments].slice(1);
-//     return function Fn() {
-//         return fn.apply(
-//             this instanceof Fn ? this : context, args.concat([...arguments])
-//         )
-//     }
-// }
-
-
 Function.prototype.myBind = function(context) {
     if (typeof this !== 'function') {
         throw new Error('Type Error');
@@ -518,43 +325,6 @@ Function.prototype.myBind = function(context) {
     }
 }
 
-
-// const orangesRotting = (grid) => {
-//     const queue = []
-//     let unrotten = 0 // 完好的个数
-//     const height = grid.length
-//     const width = grid[0].length
-//     for (let i = 0; i < height; i++) {
-//         for (let j = 0; j < width; j++) {
-//             if (grid[i][j] === 2) {
-//                 queue.push([i, j]) // 所有坏橘子的坐标推入队列
-//             } else if (grid[i][j] === 1) {
-//                 unrotten++ // 统计好橘子的个数
-//             }
-//         }
-//     }
-//     if (unrotten === 0) return 0 // 如果没有好橘子，直接返回 0
-//     let level = 0 // 树的层次，即腐坏所用的时间
-//     const dx = [0, 1, 0, -1]
-//     const dy = [1, 0, -1, -1] // 代表四个方向
-//     while(queue.length) { // queue 队列不为空就继续循环
-//         const levelSize = queue.length // 当前层节点个数
-//         level++ // 层次+1
-//         for (let i = 0; i < levelSize; i++) {
-//             let cur = queue.shift()
-//             for (let j = 0; j < 4; j++) {
-//                 let x = cur[0] + dx[j]
-//                 let y = cur[1] + dy[j]
-//                 if (x < 0 || x >= height || y < 0 || y >= width || grid[x][y] !== 1) continue // 腐化好橘子失败，超出边界或本身就不是好橘子，跳过
-//                 grid[x][y] = 2 // 将好橘子腐化，避免它被重复遍历
-//                 queue.push([x, y]) // 推入队列，下次循环将他们出列
-//                 unrotten-- // 好橘子个数-1
-//             }
-//         }
-        
-//     }
-//     return unrotten === 0 ? level - 1 : -1 // 好橘子如果还存在返回-1
-// }
 
 const orangesRotting = (grid) => {
     const M = grid.length;
@@ -658,17 +428,30 @@ String.prototype.myTrim = function() {
 //     ]
 // }
 
-
-function quickSort(arr) {
-    if (arr.length <= 1) return arr
-    let base = arr[0]
-    const left = []
-    const right = []
+// 快速排序
+// function quickSort(arr) {
+//     if (arr.length <= 1) return arr
+//     let base = arr[0]
+//     const left = []
+//     const right = []
+//     for (let i = 1; i < arr.length; i++) {
+//         if (arr[i] <= base) {
+//             left.push(arr[i])
+//         } else {
+//             right.push(arr[i])
+//         }
+//     }
+//     return [...quickSort(left), base, ...quickSort(right)]
+// }
+const quickSort = (arr) => {
+    const left = [];
+    const right = [];
+    let base = arr[0];
     for (let i = 1; i < arr.length; i++) {
-        if (arr[i] <= base) {
-            left.push(arr[i])
+        if (arr[i] < base) {
+            left.push(arr[i]);
         } else {
-            right.push(arr[i])
+            right.push(arr[i]);
         }
     }
     return [...quickSort(left), base, ...quickSort(right)]
@@ -677,23 +460,6 @@ function quickSort(arr) {
 
 function throttle(fn, delay) {
     let flag = false;
-    return function() {
-        const context = this
-        const args = arguments
-        if (!flag) {
-            fn.apply(context, args)
-            flag = true
-            setTimeout(() => {
-                flag = false
-            }, delay);
-        }
-    }
-}
-
-
-
-function throttle(fn, delay) {
-    let flag = false
     return function() {
         const context = this
         const args = arguments
@@ -730,7 +496,7 @@ function debounce(fn, delay) {
 
 
 /**
- * fiber 作为一种数据结构，用于代表某些 woker，换句话说，就是一个 work 单元，通过fiber 架构，提供了一种跟踪、调度、暂停和终止工作的边界方式。
+ * fiber 作为一种数据结构，用于代表某些 worker，换句话说，就是一个 work 单元，通过fiber 架构，提供了一种跟踪、调度、暂停和终止工作的边界方式。
  */
 
 
@@ -858,6 +624,9 @@ function makeSizer(size) {
     }
 }
 
+// const curry = (fn, ...args) => {
+//     return args.length >= fn.length ? fn(...args) : (..._args) => curry(fn, ...args, ..._args)
+// }
 
 
 
@@ -869,9 +638,9 @@ function makeSizer(size) {
 //     return a + b + c
 // }
 
-const curry = (fn, ...args) => {
-    return args.length >= fn.length ? fn(...args) : (..._args) => curry(fn, ...args, ..._args)
-}
+// const curry = (fn, ...args) => {
+//     return args.length >= fn.length ? fn(...args) : (..._args) => curry(fn, ...args, ..._args)
+// }
 
 
 /**
@@ -908,13 +677,13 @@ const curry = (fn, ...args) => {
  * 构建虚拟 DOM树=》逐层比较=》节点类型判断=》节点属性更新=》子节点比较=》标记和批量更新
  * 
  * 1. 虚拟 DOM树的构建：在使用 React、Vue框架时，首次渲染会根据组件的状态和属性构建一颗虚拟 DOM树。虚拟 DOM是轻量级的 js 对象，用来描述真实 DOM 的结构和属性。
- * 2. 逐层比较：当数据发生变化，产生新的虚拟 DOM树时，diff 算法会对新旧两颗虚拟 DOM树通过深度优先遍历逐层比较，从根节点开始，依次比较子节点。
+ * 2. 逐层比较：当数据发生变化，产生新的虚拟 DOM树时，diff 算法会对新旧两颗虚拟 DOM树通过深度优先遍历逐层
+ * 比较，从根节点开始，依次比较子节点。
  * 3. 节点类型判断：在比较两个节点时，首先会判断类型（标签名、组件类型）。如果节点类型不同，则认为两个节点及其子树完全不同，会直接用新节点替换掉旧节点。比如新的是 div，旧的是 p，会直接替换。
  * 4. 节点属性更新：如果节点类型相同，再比较节点的属性变化，对于属性只更新有变化的属性，而不是全部重新设置。比如 div 的 class 原来还old-class，变为 new-class，那么只用更新 div 的 class 属性值即可。
  * 5. 子节点的比较：对于子节点的比较，通常采用同层比较策略。以 React 为例，会按顺序遍历新旧子节点列表，尽量复用相同位置的节点。如果发现某个位置的子节点不同，会尝试通过插入、删除、移动等操作来调整子节点顺序，
- * 使得新旧子节点列表匹配。比如如旧子节点列表是 ABC，新的是 BAC，diff 算法则会通过移动子节点操作来调整顺序。
+ * 使得新旧子节点列表匹配。比如旧子节点列表是 ABC，新的是 BAC，diff 算法则会通过移动子节点操作来调整顺序。
  * 6. 在比较过程中，会对需要更新的节点标记，记录下具体的变化（属性更新、节点的删除插入等）。比较完成后，将这些变化操作批量应用到真实 DOM上，一次性更新页面，减少重绘重排的次数。
- * 
  * 
  * 
  * 复述：
@@ -942,7 +711,7 @@ function deepCopy(target, map = new Map()) {
     const newObj = Array.isArray(target) ? [] : {}
     map.set(target, newObj)
     for (let key in target) {
-        if (Object.hasOwnProperty(target[key])) {
+        if (target.hasOwnProperty(key)) {
             newObj[key] = typeof target[key] === 'object' ? deepCopy(target[key]) : target[key]
         }
     }
@@ -978,6 +747,8 @@ function throttle(fn, delay) {
 }
 
 
+
+
 /**
  * em  相对于当前元素的字体大小作为参考
  * rem 相对于根元素的字体大小作为参考
@@ -1000,10 +771,647 @@ function throttle(fn, delay) {
  * 
  * 图片层面
  * 1. 选用合适的图片格式，颜色丰富 jpeg， 透明背景 png， 质量和大小都合适 webp
- * 2. 图片进行压缩，比如用 tinypng 等
+ * 2. 图片进行压缩，比如用 tinyPng 等
  * 3. 图片懒加载
  * 
  * 其他
  * 1. 减少 dns 解析时间， dns prefetch 预解析
  * 2. 编写css js时，  尽量减少重绘重排
  */
+
+
+/**
+ * 在 ts 中interface 和 type 的区别？
+ *  type 可以描述任意类型，interface 只能描述对象类型
+ * type 声明的时候后面有=，interface 没有
+ * 多次声明的同一名称的interface 可以声明合并，type 不行
+ * interface 可以通过 extends继承，type 可以通过&进行扩展
+ */
+
+
+function myInstanceOf(left, right) {
+    let proto = left.__proto__
+    let prototype = right.prototype
+    while(true) {
+        if (!proto) return false
+        if (proto === prototype) return true
+        proto = left.__proto__
+    }
+}
+
+
+Function.prototype.myBind = function(context) {
+    if (typeof this !== 'function') {
+        throw new TypeError('Type Error');
+    }
+    const args = [...arguments].slice(1);
+    const fn = this;
+    return function Fn() {
+        fn.apply(this instanceof Fn ? this : context, args.concat(...arguments))
+    }
+}
+
+
+/**
+ * React 中为什么不推荐数组的 index 做 key
+    1. 引起不必要的刷新，一个列表删除一项，其他所有 index 都发生变化
+    2. 使用 index 作为 key 还可能导致组件状态丢失。在 React 中，组件的状态是与 key 关联的。当 key 发生变化时，React 会销毁旧的组件实例并创建新的实例，这会导致组件的状态丢失。
+    3. diff 的时候可以更高效识别哪些元素发生变化，提高渲染性能
+
+ */
+
+
+// const curry = (fn, ...args) => {
+//     return args.length >= fn.length ? fn(...args) : (..._args) => curry(fn, ...args, ..._args)
+// }
+
+
+Function.prototype.myCall = function(context) {
+    // this 指向调用 myCall 的函数，判断是否是函数调用的 myCall
+    if (typeof this !== 'function') {
+        throw TypeError('type error');
+    }
+    const args = [...arguments].slice(1);
+    let result;
+    // 如果没有传入 context ，则将其设为window
+    context = context || window;
+    // 将调用 myCall 的函数（即 this）作为一个属性挂载到 context 对象上，属性名是 fn。这样做的目的是为了让这个函数在 context 对象的上下文中执行，从而改变函数内部的 this 值。
+    context.fn = this;
+    result = context.fn(...args);
+    delete context.fn;
+    return result;
+}
+
+function greet(message) {
+    console.log(`${message},${this.name}`)
+}
+
+const person = {
+    name: '强哥'
+}
+greet.call(person, 'hello')
+
+
+Function.prototype.call = function(context) {
+    if (typeof this !== 'function') {
+        throw TypeError('type error');
+    }
+    context = context || window;
+    context.fn = this;
+    const args = [...arguments].slice(1);
+    const result = context.fn(...args);
+    delete context.fn;
+    return result;
+}
+
+Function.prototype.apply = function(context) {
+    if (typeof this !== 'function') {
+        throw TypeError('type error');
+    }
+    let result;
+    context = context || window;
+    context.fn = this;
+    if (arguments[1]) {
+        result = context.fn(...arguments[1]);
+    } else {
+        result = context.fn();
+    }
+    delete context.fn;
+    return result;
+}
+
+
+/**
+ * 在 react 中为什么 setSate 页面却不渲染
+ * 1. 数据没变化
+ * 2. shouldComponentUpdate返回 false
+ * 3. 直接修改 state
+ * 4. 赋值错误  函数式中用类式的
+ */
+
+
+// 链式调用
+class Calculator {
+    constructor(num = 0) {
+        this.num = num;
+        return this;
+    }
+    add(value) {
+        this.num += value
+        return this
+    }
+
+    subtract(value) {
+        this.num -= value
+        return this
+    }
+
+    getValue() {
+        return this.num
+    }
+}
+
+const res = new Calculator(10).add(10).subtract(1).getValue()
+console.log(res)
+
+function Person(name, age) {
+    this.age = age 
+    this.name = name
+}
+Person.prototype = {
+    info() {
+        console.log(`${this.name},${this.age}`);
+        return this;
+    },
+    start() {
+        console.log(`我会唱歌 我会唱我名字的歌${this.name}`);
+        return this; 
+    },
+    end: function() {
+        console.log('end')
+        return this
+    },
+
+}
+Person.prototype.info = function() {
+    console.log(`${this.name},${this.age}`)
+    return this;
+}
+Person.prototype.start = function() {
+    console.log(`我会唱歌 我会唱我名字的歌${this.name}`)
+    return this
+}
+Person.prototype.end = function() {
+    console.log('end')
+    return this
+}
+const p1 = new Person('xqg', 243)
+p1.info().start().end()
+
+
+Function.prototype.call = function(context) {
+    if (typeof this !== 'function') {
+        throw TypeError('type error');
+    }
+    const args = [...arguments].slice(1);
+    context = context || window;
+    context.fn = this;
+    const result = context.fn(...args);
+    delete context.fn;
+    return result;
+}
+
+
+Function.prototype.apply = function(context) {
+    if (typeof this !== 'function') {
+        throw new TypeError('type error');
+    }
+    context = context || window;
+    context.fn = this;
+    let result;
+    if (arguments[1]) {
+        result = context.fn(...arguments[1])
+    } else {
+        result = context.fn()
+    }
+    delete context.fn;
+    return result;
+}
+
+
+
+/**
+ * diff 算法是用来比较新旧两颗虚拟 DOM树差异的算法，通过最小的实际 DOM 操作来提高页面更新性能。
+ * 构建虚拟 DOM树 =》 逐层比较 =》节点类型判断 =》节点属性更新 =》 子节点比较 =》 标记和批量更新
+ * 
+ * 1. 虚拟 DOM树的构建：在使用 React、Vue框架时，首次渲染会根据组件的状态和属性构建一颗虚拟 DOM树。虚拟 DOM时轻量级的 js 对象，用来描述真实 DOM 的结构和属性。
+ * 2. 逐层比较：当数据发生变化，产生新的虚拟 DOM树时，diff 算法会对新旧两颗虚拟 DOM树进行深度优先遍历逐层比较，从根节点开始，依次比较子节点。
+ * 3. 节点类型判断： 在比较两个节点时，首先会判断类型（标签名、组件类型）。如果节点类型不同，则认为两个节点及其子树完全不同，会直接用新节点替换点旧节点。比如新的是 div，旧的是 p，会直接替换。
+ * 4. 节点属性更新： 如果节点类型相同，在比较节点的属性变化，只更新有变化的属性。比如 div 的 class 原来是old-class，变为 new-class，那么只用更新 div 的 class 属性值即可。
+ * 5. 子节点的比较：对于子节点的比较，通常采用同层比较策略。以 React 为例，会按顺序遍历新旧子节点列表，尽量复用相同位置的节点。如果发现某个位置的子节点不同，会尝试通过移动、插入和删除等操作来调整子节点顺序，使得新旧
+ * 子节点列表匹配。比如旧子节点列表是 ABC，新的是 BAC，diff 算法会通过移动子节点的操作来调整顺序。
+ * 6. 在比较过程中，会对需要更新的节点标记，记录下具体的变化（属性更新、节点的删除插入等）。比较完成后，将这些变化操作批量应用到真实 DOM 上，一次性更新页面，减少重绘重排次数。
+ * 
+ * 回忆：虚拟DOM树的构建=》逐层比较=》节点类型判断=》节点属性更新=》子节点比较=》标记和批量更新
+ * 
+ * 回忆 2：虚拟 DOM树的构建 =》 逐层比较 =》 节点类型判断 =》 节点属性更新 =》 子节点比较 =》 标记和批量更新
+ */
+
+
+// 并发:使用 Promise 和递归实现
+
+const tasks = Array.from({length: 10}, (_, i) => {
+    return () => new Promise((resolve) => {
+        setTimeout(() => {
+            console.log(`Task ${i} was completed`)
+            resolve(i)
+        }, Math.random() * 1000);
+    })
+})
+
+
+function concurrentControl(tasks, limit) {
+    let index = 0;
+    const results = [];
+    let runningCount = 0;
+    return new Promise((resolve) => {
+        function runTask() {
+            if (index === tasks.length && runningCount === 0) {
+                resolve(results);
+                return;
+            }
+            while(index < tasks.length && runningCount < limit) {
+                const task = tasks[index];
+                const currentIndex = index;
+                index++;
+                runningCount++;
+                task().then(val => {
+                    results[currentIndex] = val;
+                }, err => {
+                    results[currentIndex] = err;
+                }).finally(() => {
+                    runningCount--;
+                    runTask();
+                })
+            }
+        }
+        runTask();
+    })
+}
+
+concurrentControl(tasks, 4)
+
+
+
+
+
+/**
+ * Vue 和 React 的 Diff 算法在核心目标上相似（通过高效比较虚拟 DOM 树来最小化真实 DOM 操作），但在具体实现和优化策略上有显著差异。以下是主要区别：
+
+---
+
+### 1. **子节点列表对比策略**
+#### **React：单端遍历 + Key 匹配**
+- **策略**：按顺序遍历新旧子节点列表，通过 `key` 匹配节点。
+- **特点**：
+  - 若遇到相同 `key` 但位置变化的节点，会标记为移动（而非删除重建）。
+  - **无 `key` 时性能下降**：顺序变化可能导致大量节点被错误标记为更新或删除。
+  - **无法高效处理头/尾之外的插入**：例如在列表头部插入元素，会导致后续所有节点被认为需要更新。
+
+#### **Vue 2：双端交叉对比**
+- **策略**：同时从新旧子节点数组的**头尾**开始四指针比较，寻找可复用的节点。
+- **特点**：
+  - 更快识别节点移动（如列表反转时）。
+  - 减少不必要的 DOM 操作，尤其在节点位置频繁变化的场景下更高效。
+  - 结合 `key` 可以精准识别节点，避免低效的顺序比对。
+
+#### **Vue 3：动态子序列优化**
+- **策略**：在双端对比基础上，对无法匹配的剩余子节点，通过**最长递增子序列算法**确定最小移动次数。
+- **优势**：进一步减少节点移动次数，提升性能。
+
+---
+
+### 2. **组件更新粒度**
+#### **React：全量 Diff + 组件级更新**
+- **更新触发**：依赖 `setState` 或父组件重渲染，默认递归更新子树。
+- **优化手段**：
+  - `shouldComponentUpdate` 或 `React.memo` 手动控制更新。
+  - 不可变数据配合浅比较优化（如 Redux）。
+
+#### **Vue：响应式依赖追踪**
+- **更新触发**：基于响应式系统，数据变化自动追踪依赖的组件。
+- **优化手段**：
+  - **组件级细粒度更新**：只有依赖变化的组件会重新渲染。
+  - **Block Tree（Vue 3）**：将动态节点与静态节点分离，跳过静态子树 Diff。
+
+---
+
+### 3. **静态内容优化**
+#### **React：有限静态优化**
+- **策略**：依赖开发者手动优化（如 `useMemo`、`React.memo`）。
+- **缺点**：未自动跳过未变化部分的 Diff。
+
+#### **Vue 3：编译时静态提升**
+- **策略**：
+  - **静态节点提升（Hoist Static）**：将静态节点提取为常量，复用而非重新创建。
+  - **Patch Flags**：标记动态绑定的属性（如 `class` 或 `style`），Diff 时仅检查标记部分。
+- **优势**：大幅减少虚拟 DOM 对比范围。
+
+---
+
+### 4. **算法复杂度**
+- **React**：O(n) 复杂度，基于两个假设：
+  1. 不同类型元素生成不同树（如 `<div>` 变 `<span>` 会销毁整棵子树）。
+  2. 通过 `key` 暗示子节点稳定性。
+- **Vue**：同样 O(n) 复杂度，但通过双端对比和动态规划（最长递增子序列）进一步优化移动操作。
+
+---
+
+### 5. **设计哲学差异**
+- **React**：推崇函数式、不可变数据，Diff 算法更通用，但依赖开发者优化（如合理使用 `key`）。
+- **Vue**：拥抱响应式可变数据，通过编译时优化（如模板静态分析）减少运行时开销。
+
+---
+
+### 总结对比表
+| 特性                | React                     | Vue 2               | Vue 3                          |
+|---------------------|---------------------------|---------------------|--------------------------------|
+| **子节点对比策略**   | 单端遍历 + Key 匹配       | 双端交叉对比        | 双端对比 + 最长递增子序列      |
+| **静态优化**         | 手动 (`memo`)             | 有限                | 编译时提升 + Patch Flags       |
+| **更新粒度**         | 组件级（需手动优化）      | 组件级              | 组件级 + Block Tree 优化       |
+| **数据驱动**         | 不可变数据 + 显式更新     | 响应式系统          | 响应式系统 + 更细粒度追踪      |
+| **列表移动效率**     | 依赖 Key 顺序             | 高效处理位置变化    | 动态规划优化移动次数           |
+
+---
+
+### 示例场景
+假设有一个列表 `[A, B, C, D]` 变为 `[D, A, B, C]`：
+- **React**：若未设置 `key`，可能销毁 A/B/C/D 并重建；若正确使用 `key`，将移动 D 到头部。
+- **Vue**：通过双端对比直接识别 D 可复用，仅移动一次 DOM 节点。
+
+---
+
+### 选择建议
+- **React**：适合需要高度控制更新逻辑的项目，尤其在复杂状态管理场景。
+- **Vue**：适合追求开发效率与默认性能优化的场景，尤其是频繁更新 UI 的应用。
+ */
+
+
+/**
+ * React 的 fiber
+ * 为什么出现？ 在 fiber 之前 React 的更新是同步的，一口气完成生命周期函数的执行、vDom 树的对比以及更新。这个过程如果足够长，用户的输入以及动画都不能被及时响应，出现卡顿现象。
+ * fiber将更新过程分为两个节点，一个是协调阶段，一个是提交阶段。
+ * 协调阶段的任务进行分片处理，可以被打断，及时响应更高优先级的任务。具体来讲即在每一个分片任务执行完成后，将执行权交给浏览器来判断，是否继续还是执行更高优先级的任务。
+ * 协调阶段完成后，提交阶段是一口气完成的，将 diff 后的差异应用到实体 DOM 上，完成更新。
+ */
+
+
+/**
+ * vue和 react 更新区别
+ * Vue 基于响应式系统，数据变化自动跟踪依赖的组件。组件级别的颗粒度更新、BlockTree，将动态节点和静态节点分离，跳过静态节点树 Diff。
+ * Vue 是双端交叉对比，新旧两颗 dom树双端四指针比较，寻找可复用节点。 React 是单端，按顺序遍历新旧子节点列表，通过 key 匹配。
+ * 
+ */
+
+function findDuplicate(arr) {
+    let slow = 0;
+    let fast = 0;
+    do {
+        slow = arr[slow];
+        fast = arr[arr[fast]];
+    } while(slow !== fast)
+    
+    fast = 0;
+    while(slow !== fast) {
+        slow = arr[slow];
+        fast = arr[fast]
+    } 
+    return slow;
+}
+
+
+/**
+ * content-type 都有哪些值？
+ * content-type 是 http 请求头字段，用于指示请求或响应的数据的媒体类型。它告诉客户端或服务端发送、接收的数据是什么格式的，以便正确的解析和处理。
+ * 
+ * application/x-www-url-encoded 通常用于表单数据的提交，这种提交的数据放在 body 里面，按照 key&value 格式，并且对 key 和 value 都进行了 URL 编码，不同的键值对之间用&符号分隔。
+ * 
+ * multipart/form-data  主要用于表单提交，通常表单上传文件时使用这种格式。它允许在请求的同时发送多种不同类型的数据，包括文件、文本等。每个部分都有一个独立的边界标识，用于分隔不同的字段和文件内容。
+ * 
+ * application/json 表示请求或响应中的数据是 JSON格式。
+ * 
+ * text/plain 表示纯文本格式
+ * text/html 表示 html 格式
+ */
+
+
+for (var i = 0; i < 5; i++) {
+    (
+        function(i) {
+            setTimeout(() => {
+                console.log(i)
+            }, i * 1000);
+        }
+    )(i)
+}
+
+
+// 定义二叉树节点类
+class TreeNode {
+    constructor(val = 0, left = null, right = null) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+// 寻找二叉树上从根结点到给定结点的路径 用 js 解答
+function findTarget(node, target) {
+    const path = [];
+    function dfs(node, target) {
+        if (!node) return false;
+        path.push(node);
+        if (node === target) return true;
+        if (dfs(node.left, target) || dfs(node.right, target)) return true;
+        path.pop();
+        return false;
+    }
+    dfs(node, target);
+    return path;
+}
+
+// 示例用法
+// 构建二叉树
+const root = new TreeNode(1);
+root.left = new TreeNode(2);
+root.right = new TreeNode(3);
+root.left.left = new TreeNode(4);
+root.left.right = new TreeNode(5);
+
+// 目标节点
+const target = root.left.right;
+
+// 寻找路径
+const path = findPath(root, target);
+const pathValues = path.map(node => node.val);
+console.log("从根节点到目标节点的路径值为:", pathValues); 
+
+const treeData = [
+    {
+        id: 1,
+        children: [
+            {
+                id: 2,
+                children: [
+                    { id: 4 }
+                ]
+            },
+            { id: 3 }
+        ]
+    }
+];
+
+const findParents = (tree, targetId, path = []) => {
+    for (const node of tree) {
+        if (node.id === targetId) {
+            return [...path];
+        } else if (node.children) {
+            const result = findParents(node.children, targetId, path);
+            if (result) {
+                return [...path, node];
+            }
+        }
+    }
+    return null;
+}
+
+
+
+
+
+// 手写 promise finally
+Promise.prototype.finally = function(callback) {
+    // this 是当前 Promise 实例
+    return this.then(
+        (value) => {
+            return Promise.resolve(callback()).then(() => value);
+        },
+        // 当 Promise失败时
+        (reason) => {
+            return Promise.resolve(callback()).then(() => {
+                throw reason;
+            })
+        }
+    )
+}
+
+
+Promise.prototype.finally = function(callback) {
+    return this.then(
+        val => Promise.resolve(callback()).then(() => val),
+        reason => Promise.resolve(callback()).then(() => {
+            throw reason
+        })
+    )
+}
+
+
+/**
+ * 在 React 中，useRef 是一个非常强大且常用的 Hook，它的主要作用是创建一个可变的引用对象（reference），用于在组件的整个生命周期中持久化存储数据或直接操作 DOM 元素。
+ * Hook 的存储机制
+React 在函数组件中使用一个链表（fiber 节点的 memoizedState）存储所有的 Hook 数据。
+每次渲染时，React 按顺序调用 Hook（如 useState、useRef），并复用上一次的状态。
+对于 useRef，React 只在首次渲染时创建 { current: initialValue } 对象，后续渲染直接返回该引用。
+
+为什么不触发渲染？
+React 的渲染是由状态（useState）或 props 变化触发的。
+useRef 返回的对象是可变的，但它的引用地址始终不变（即 ref === ref），React 不认为它“变了”，因此不会重新渲染。
+ */
+let hookState = [];
+let hookIndex = 0;
+function useRef(initialValue) {
+    if (!hookState[hookIndex]) {
+        hookState[hookIndex] = {current: initialValue};
+    }
+    return hookState[hookIndex++];
+}
+
+
+
+/**
+ * 数组转链表
+ */
+function NodeList(val) {
+    this.val = val;
+    this.next = null;
+
+}
+function ArrayToNodeList(list) {
+    const head = new NodeList(0);
+    let cur = head;
+    for (let i = 0; i < list.length; i++) {
+        cur.next = {val: list[i], next: null};
+        cur = cur.next; 
+    }
+    return head.next;
+}
+/**
+ * 链表转数组
+ */
+function NodeListToArray(node) {
+    const list = [];
+    let header = node;
+    while(header) {
+        list.push(header.val);
+        header = header.next;
+    }
+    return list;
+}
+
+/**
+ * 特性	        React	            Vue 2	            Vue 3
+​子节点对比策略​	单端遍历 + Key 匹配	  双端交叉对比	        双端对比 + 最长递增子序列
+​静态优化​	        手动 (memo)	        有限	            编译时提升 + Patch Flags
+​更新粒度​	        组件级（需手动优化）	组件级	            组件级 + Block Tree 优化
+​数据驱动​	        不可变数据 + 显式更新   响应式系统	        响应式系统 + 更细粒度追踪
+​列表移动效率​	    依赖 Key 顺序	       高效处理位置变化	    动态规划优化移动次数
+ */
+
+
+const shuffleBySorting = (arr) => {
+    return arr.sort(() => Math.random() - 0.5);
+}
+
+const shuffleModernFisherYates = (arr) => {
+    for (let i = 0; i < arr.length; i++) {
+        const randomIndex = i + Math.floor(Math.random() * (arr.length - i));
+        let temp = arr[i];
+        arr[i] = arr[randomIndex];
+        arr[randomIndex] = temp;
+    }
+    return arr
+}
+
+
+
+
+/**
+ * 以下是前端中一些常用的设计模式及SOLID原则的介绍：
+
+### 常用设计模式
+- **单例模式**：保证一个类仅有一个实例，并提供一个访问它的全局访问点。如在前端中，可用于管理全局状态的存储对象，像Vuex或Redux中的store，无论在应用的何处调用，都是同一个实例。
+- **工厂模式**：将对象的创建和使用分离，通过一个工厂函数或类来负责创建对象。比如在创建不同类型的图表时，可使用工厂模式根据传入的参数创建柱状图、折线图等不同类型的图表实例。
+- **观察者模式**：定义了一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都会得到通知并自动更新。在前端框架中，如Vue和React的响应式原理就运用了观察者模式，数据变化时会自动更新相关的视图。
+- **策略模式**：定义一系列算法，将每个算法封装起来，并使它们可以相互替换。在前端中，表单验证可使用策略模式，针对不同的表单字段，如用户名、密码、邮箱等，定义不同的验证策略。
+
+### SOLID原则
+- **单一职责原则（Single Responsibility Principle）**：一个类或模块应该只有一个引起它变化的原因，即一个类只负责一项职责。比如一个用户管理模块，只负责用户的注册、登录、注销等与用户相关的操作，不应该包含与订单处理等其他无关的功能。
+- **开闭原则（Open-Closed Principle）**：软件实体（类、模块、函数等）应该对扩展开放，对修改关闭。在前端开发中，当需要添加新功能时，应尽量通过扩展现有代码来实现，而不是直接修改已有的稳定代码。
+- **里氏替换原则（Liskov Substitution Principle）**：所有引用基类的地方必须能透明地使用其子类的对象。比如在前端中，若有一个基类Shape用于表示图形，那么其子类Rectangle、Circle等应该可以在任何使用Shape的地方替换使用，且不会引起程序的错误或异常。
+- **接口隔离原则（Interface Segregation Principle）**：客户端不应该依赖它不需要的接口。在前端开发中，如果一个组件只需要用到某个接口的部分方法，那么应该将这个接口拆分成更小的、更专注的接口，让组件只依赖它需要的接口。
+- **依赖倒置原则（Dependency Inversion Principle）**：高层模块不应该依赖底层模块，二者都应该依赖其抽象；抽象不应该依赖细节，细节应该依赖抽象。在前端中，可通过依赖注入的方式来实现，如在一个复杂的组件中，可将其依赖的服务或数据以参数的形式传入，而不是在组件内部直接创建或获取。
+
+ */
+
+
+function formatDate(date, format) {
+    if (!(date instanceof Date)) {
+        date = new Date(date);
+    }
+    if (isNaN(date.getTime())) {
+        throw new Error('Invalid Date');
+    }
+    const dateInfo = {
+        yyyy: String(date.getFullYear()),
+        yy: String(date.getFullYear()).slice(-2),
+        MM: String(date.getMonth() + 1).padStart(2, '0'),
+        dd: String(date.getDate()).padStart(2, '0'),
+        HH: String(date.getHours()).padStart(2, '0'),
+        mm: String(date.getMinutes()).padStart(2, '0'),
+        ss: String(date.getSeconds()).padStart(2, '0'),
+    }
+    return format.replace(/yyyy|yy|MM|dd|HH|mm|ss/g,(match) => {
+        return dateInfo[match]
+    })
+}
+

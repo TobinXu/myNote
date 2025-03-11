@@ -1,3 +1,4 @@
+
 /**
  * 1.海投，尽量早投递➕官网投递➕内推码投递2.有特别想去的公司的话，在牛客搜“公司➕岗位”相关面经，
  * 把八股和场景题都记在你的文档里3.把这些问题，一个一个去查csdn去把原理弄懂，千万别死背4.相信我，你搞懂一个公司的30个人的面经题，
@@ -14,12 +15,6 @@
  * 
  * 
  * nest
- * 
- * 
- * 
- * 
- * 
- * 
  * 
  * 
  * v1 > v2 返回1，v1 < v2返回-1，v1===v2返回0
@@ -55,6 +50,7 @@
  * const script = document.createElement('script');
  * script.scr = 'https://www.baidu.com/api?callback=handleResponse';
  * document.body.appendChild(script);
+ * 
  * 
  * 
  * b. CORS 允许服务器通过HTTP头部来指定哪些源可以访问该服务器资源
@@ -267,6 +263,7 @@
 //   }
 // }
 
+// 实现 new
 // function objFactory() {
 //   const obj = new Object()
 //   const Constructor = Array.prototype.shift.call(arguments)
@@ -724,29 +721,29 @@ function unique(arr) {
   return count
 }
 
-function Animal(name) {
-  this.name = name
-}
+// function Animal(name) {
+//   this.name = name
+// }
 
-Animal.prototype.sayHello = function() {
-  console.log('Hello, I am' + this.name)
-}
+// Animal.prototype.sayHello = function() {
+//   console.log('Hello, I am' + this.name)
+// }
 
-function Dog(name, breed) {
-  Animal.call(this, name)
-  this.breed = breed
-}
+// function Dog(name, breed) {
+//   Animal.call(this, name)
+//   this.breed = breed
+// }
 
-Dog.prototype = Object.create(Animal.prototype)
-Dog.prototype.constructor = Dog
+// Dog.prototype = Object.create(Animal.prototype)
+// Dog.prototype.constructor = Dog
 
-Dog.prototype.bark = function() {
-  console.log(this.name + 'is Barking!')
-}
+// Dog.prototype.bark = function() {
+//   console.log(this.name + 'is Barking!')
+// }
 
-const dog = new Dog('Tom', 'Golden Retriever')
-dog.sayHello()
-dog.bark()
+// const dog = new Dog('Tom', 'Golden Retriever')
+// dog.sayHello()
+// dog.bark()
 
 
 function mySetTimeout(cb, delay) {
@@ -1513,7 +1510,7 @@ function createArray<T>(length: number, value: T): T[] {
 }
 
 
-function createArr<T>(length: number, value: T): T[] {
+function createArr<T>(length: number, value: T): T[]  {
   const result: T[] = [];
   for (let i = 0; i < length; i++) {
     result[i] = value;
@@ -1591,3 +1588,111 @@ class EventHub {
  * 
  * http3 使用了基于 udp 协议的 QUICK 协议，实现了多路复用、有序交付、重传等功能
  */
+
+
+
+/**
+ * 实现数组和树的相互转换
+ */
+// 数组项，包含 id、name、parentId
+interface ArrayItem {
+  id: number;
+  name: string;
+  parentId: number | null;
+}
+// 树节点数据类型，包含 id、name以及可能包含的子节点
+interface TreeNode {
+  id: number;
+  name: string;
+  children?: TreeNode[];
+}
+
+
+function arrayToTree(arr: ArrayItem[]): TreeNode[] {
+  // 用于id 和 TreeNode节点的映射，可以通过 id 快速查询树节点，时间复杂度 O(1)
+  const treeNode: Map<number, TreeNode> = new Map();
+  const roots: TreeNode[] = [];
+  for (const item of arr) {
+    const {id, name} = item;
+    const node: TreeNode = {id, name};
+    treeNode.set(id, node);
+  }
+  for (const item of arr) {
+    const {id, name, parentId} = item;
+    const node = treeNode.get(id)!;
+    if (parentId !== null) {
+      const parent = treeNode.get(parentId);
+      if (parent) {
+        parent.children = parent.children || [];
+        parent.children.push(node);
+      } else {
+        // 孤儿节点视为根节点
+        roots.push(node);
+      }
+    } else {
+      // parentId 为 null  视为根节点
+      roots.push(node);
+    }
+  }
+  return roots;
+}
+
+
+function tree2Array(roots: TreeNode | TreeNode[]): ArrayItem[] {
+  const arr: ArrayItem[] = [];
+  const visited = new Set<TreeNode>(); // 检查循环引用
+  const queue: {node: TreeNode; parentId: number | null}[] = [];
+
+  // 初始化队列，支持根节点
+  const rootNodes = Array.isArray(roots) ? roots : [roots];
+  rootNodes.forEach(root => {
+    if (root !== null) {
+      queue.push({node: root, parentId: null});
+    }
+  })
+  while(queue.length > 0) {
+    const {node, parentId} = queue.shift()!;
+    // 检查循环引用
+    if (visited.has(node)) {
+      throw new Error('Detected cyclic reference in the tree');
+    }
+    visited.add(node);
+    // 生成 ArrayItem
+    const {id, name, children} = node;
+    arr.push({id, name, parentId: parentId ?? null});
+    if (children) {
+      for (const child of children) {
+        queue.push({node: child, parentId: id});
+      }
+    }
+  }
+  return arr;
+}
+
+
+function tree22Array(roots: TreeNode | TreeNode[]):ArrayItem[] {
+  const arr: ArrayItem[] = [];
+  const queue: {node: TreeNode, parentId: number | null}[] = [];
+  const visited = new Set<TreeNode>();
+  const rootNodes = Array.isArray(roots) ? roots : [roots];
+  rootNodes.forEach(root => {
+    if (root !== null) {
+      queue.push({node: root, parentId: null});
+    }
+  })
+  while(queue.length > 0) {
+    const {node, parentId} = queue.shift()!;
+    if(visited.has(node)) {
+      throw new Error('Detected a cyclic reference in the tree');
+    }
+    visited.add(node);
+    const {id, name, children} = node;
+    arr.push({id, name, parentId: parentId ?? null});
+    if (children) {
+      for (const child of children) {
+        queue.push({node: child, parentId: id});
+      }
+    }
+  }
+  return arr;
+}
